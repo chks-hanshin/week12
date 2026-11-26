@@ -1671,7 +1671,7 @@
         </button>
 
         <button class="auth-pill-btn" id="authHeaderBtn" onclick="handleAuthHeaderClick()">
-          로그인 / 회원가입
+          로그인 · 회원가입
         </button>
       </div>
     </div>
@@ -1913,7 +1913,7 @@
           <ul>
             <li><a href="#" onclick="openAuthModal('login'); return false;">로그인</a></li>
             <li><a href="#" onclick="openAuthModal('signup'); return false;">회원가입</a></li>
-            <li><a href="#" onclick="openMyPage('coupons'); return false;">쿠폰함 & 멤버십</a></li>
+            <li><a href="#" onclick="openMyPage(); return false;">마이페이지 & 회원정보</a></li>
           </ul>
         </div>
       </div>
@@ -1958,12 +1958,6 @@
       </div>
       <button type="submit" class="btn-primary" style="width:100%; margin-top:6px;">로그인</button>
 
-      <div class="demo-login-box">
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">빠른 스토어 체험이 필요하신가요?</p>
-        <button type="button" class="btn-demo" onclick="loginWithDemoAccount()">
-          삼성 VIP 체험 계정으로 원클릭 로그인
-        </button>
-      </div>
     </form>
 
     <!-- Sign Up Form -->
@@ -1981,8 +1975,8 @@
         <input type="tel" id="signupPhone" placeholder="010-1234-5678" required />
       </div>
       <div class="form-group">
-        <label for="signupPassword">비밀번호 (8자 이상)</label>
-        <input type="password" id="signupPassword" placeholder="영문, 숫자 포함 8자 이상" oninput="updatePwStrength(this.value)" required />
+        <label for="signupPassword">비밀번호 (6자 이상)</label>
+        <input type="password" id="signupPassword" placeholder="6자 이상 입력하세요" oninput="updatePwStrength(this.value)" required />
         <div class="pw-meter"><div class="pw-meter-bar" id="pwMeterBar"></div></div>
       </div>
       <div class="form-group">
@@ -1993,7 +1987,7 @@
         <input type="checkbox" id="agreeTerms" required style="width:auto; height:auto;" />
         <label for="agreeTerms" style="margin:0; font-weight:500;">[필수] 삼성 계정 이용약관 및 개인정보 수집·이용에 동의합니다.</label>
       </div>
-      <button type="submit" class="btn-primary" style="width:100%; margin-top:6px;">회원가입 완료 (5만원 쿠폰 즉시 지급)</button>
+      <button type="submit" class="btn-primary" style="width:100%; margin-top:6px;">회원가입 완료 (가입 즉시 3,000P 적립)</button>
     </form>
   </div>
 
@@ -2369,44 +2363,14 @@
     let wishlist = JSON.parse(localStorage.getItem("samsung_demo_wish") || "[]");
     let appliedCoupon = null;
 
-    const defaultDemoUser = {
-      name: "김삼성",
-      email: "demo@samsung.com",
-      password: "Password123!",
-      phone: "010-2026-8800",
-      points: 25000,
-      coupons: [
-        { code: "WELCOME50000", title: "신규회원 50,000원 웰컴 쿠폰", amount: 50000 },
-        { code: "SAMSUNG2026", title: "삼성닷컴 스페셜 100,000원 할인권", amount: 100000 }
-      ],
-      orders: [
-        {
-          orderId: "KR20261115-8941",
-          date: "2026.11.15",
-          items: "Galaxy Buds3 Pro (실버) 외 1건",
-          total: 271000,
-          status: "배송완료"
-        }
-      ]
-    };
-
-    let usersDB = JSON.parse(localStorage.getItem("samsung_demo_users") || "null");
-    if (!usersDB) {
-      usersDB = [defaultDemoUser];
-      localStorage.setItem("samsung_demo_users", JSON.stringify(usersDB));
-    }
-
-    let currentUser = JSON.parse(localStorage.getItem("samsung_demo_session") || "null");
+    // Supabase Auth 세션 및 shop_profiles 프로필 상태 (브라우저 localStorage 에 회원 정보/비밀번호 저장 안 함)
+    let currentUser = null;    // Supabase auth.user 객체
+    let currentProfile = null; // shop_profiles 테이블의 내 행 데이터
+    let localOrders = [];      // 다음 단계에서 shop_orders 로 이전될 임시 주문 내역
 
     function saveState() {
       localStorage.setItem("samsung_demo_cart", JSON.stringify(cart));
       localStorage.setItem("samsung_demo_wish", JSON.stringify(wishlist));
-      localStorage.setItem("samsung_demo_users", JSON.stringify(usersDB));
-      if (currentUser) {
-        localStorage.setItem("samsung_demo_session", JSON.stringify(currentUser));
-      } else {
-        localStorage.removeItem("samsung_demo_session");
-      }
       updateHeaderBadges();
     }
 
@@ -2976,27 +2940,96 @@
         status: "결제완료 · 배송준비중"
       };
 
-      const earnedPts = Math.round(finalPaid * 0.02);
-      currentUser.orders.unshift(newOrder);
-      currentUser.points = (currentUser.points || 0) + earnedPts;
-
-      const uIdx = usersDB.findIndex((u) => u.email === currentUser.email);
-      if (uIdx !== -1) usersDB[uIdx] = currentUser;
+      localOrders.unshift(newOrder);
 
       cart = [];
       appliedCoupon = null;
       saveState();
       closeAllOverlays();
-      showToast(`주문이 완료되었습니다! (${earnedPts.toLocaleString()}P 적립)`);
+      showToast("주문이 완료되었습니다!");
       openMyPage("orders");
     }
 
     // =========================================================================
-    // 8. AUTHENTICATION (LOGIN, SIGN-UP & MY PAGE)
+    // 8. SUPABASE AUTHENTICATION & SHOP_PROFILES MY PAGE
     // =========================================================================
+    function translateAuthError(error) {
+      if (!error) return "알 수 없는 오류가 발생했습니다.";
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("user already registered") || msg.includes("already been registered") || msg.includes("already exists")) {
+        return "이미 가입된 이메일 주소입니다. 로그인 탭을 이용해 주세요.";
+      }
+      if (msg.includes("invalid login credentials")) {
+        return "이메일 또는 비밀번호가 올바르지 않습니다.";
+      }
+      if (msg.includes("password should be at least") || msg.includes("weak password")) {
+        return "비밀번호는 6자 이상으로 입력해 주세요.";
+      }
+      if (msg.includes("invalid email") || msg.includes("unable to validate email")) {
+        return "올바른 이메일 주소 형식을 입력해 주세요.";
+      }
+      if (msg.includes("email not confirmed")) {
+        return "이메일 인증이 완료되지 않았습니다. 받은 편지함을 확인해 주세요.";
+      }
+      if (msg.includes("rate limit") || msg.includes("too many requests")) {
+        return "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
+      }
+      return "요청 처리 중 오류가 발생했습니다: " + error.message;
+    }
+
+    function formatDisplayGrade(grade) {
+      const map = {
+        WELCOME: "WELCOME",
+        SILVER: "SILVER",
+        GOLD: "GOLD",
+        VIP: "VIP"
+      };
+      return map[grade] || grade || "WELCOME";
+    }
+
+    async function fetchMyProfile(userId) {
+      if (!userId) {
+        currentProfile = null;
+        return null;
+      }
+      const { data, error } = await db
+        .from("shop_profiles")
+        .select("id, email, name, phone, grade, points, role, created_at")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("프로필 조회 오류:", error.message);
+        return null;
+      }
+      currentProfile = data;
+      return data;
+    }
+
+    async function syncSessionState() {
+      const { data, error } = await db.auth.getSession();
+      if (error) {
+        console.error("세션 확인 오류:", error.message);
+        currentUser = null;
+        currentProfile = null;
+        updateHeaderBadges();
+        return;
+      }
+
+      const session = data ? data.session : null;
+      if (session && session.user) {
+        currentUser = session.user;
+        await fetchMyProfile(currentUser.id);
+      } else {
+        currentUser = null;
+        currentProfile = null;
+      }
+      updateHeaderBadges();
+    }
+
     function handleAuthHeaderClick() {
       if (currentUser) {
-        openMyPage("orders");
+        logoutUser();
       } else {
         openAuthModal("login");
       }
@@ -3028,123 +3061,169 @@
     function updatePwStrength(pw) {
       const bar = document.getElementById("pwMeterBar");
       let score = 0;
-      if (pw.length >= 8) score += 40;
+      if (pw.length >= 6) score += 40;
       if (/[A-Za-z]/.test(pw) && /[0-9]/.test(pw)) score += 35;
       if (/[^A-Za-z0-9]/.test(pw)) score += 25;
       bar.style.width = score + "%";
       bar.style.background = score < 50 ? "#ef4444" : score < 80 ? "#f59e0b" : "#10b981";
     }
 
-    function submitLogin(e) {
+    async function submitLogin(e) {
       e.preventDefault();
       const email = document.getElementById("loginEmail").value.trim().toLowerCase();
-      const pw = document.getElementById("loginPassword").value;
+      const password = document.getElementById("loginPassword").value;
 
-      const user = usersDB.find((u) => u.email.toLowerCase() === email && u.password === pw);
-      if (!user) {
-        showAuthError("이메일 또는 비밀번호가 일치하지 않습니다. 아래 원클릭 체험 계정을 이용하실 수도 있습니다.");
+      const { data, error } = await db.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        showAuthError(translateAuthError(error));
         return;
       }
 
-      currentUser = user;
-      saveState();
+      currentUser = data.user;
+      await fetchMyProfile(currentUser.id);
+      updateHeaderBadges();
       closeAllOverlays();
-      showToast(`${currentUser.name}님, 삼성닷컴에 오신 것을 환영합니다!`);
+
+      const displayName = (currentProfile && currentProfile.name) ||
+        (currentUser.user_metadata && currentUser.user_metadata.name) ||
+        email.split("@")[0];
+      showToast(`${displayName} 님, 삼성닷컴에 오신 것을 환영합니다!`);
     }
 
-    function loginWithDemoAccount() {
-      const demo = usersDB.find((u) => u.email === "demo@samsung.com") || defaultDemoUser;
-      currentUser = demo;
-      saveState();
-      closeAllOverlays();
-      showToast(`${currentUser.name} VIP 체험 계정으로 로그인되었습니다.`);
-    }
-
-    function submitSignup(e) {
+    async function submitSignup(e) {
       e.preventDefault();
       const name = document.getElementById("signupName").value.trim();
       const email = document.getElementById("signupEmail").value.trim().toLowerCase();
       const phone = document.getElementById("signupPhone").value.trim();
-      const pw = document.getElementById("signupPassword").value;
+      const password = document.getElementById("signupPassword").value;
       const pwConfirm = document.getElementById("signupPasswordConfirm").value;
 
-      if (pw.length < 8) {
-        showAuthError("비밀번호는 8자 이상으로 설정해 주세요.");
+      if (password.length < 6) {
+        showAuthError("비밀번호는 6자 이상으로 입력해 주세요.");
         return;
       }
-      if (pw !== pwConfirm) {
+      if (password !== pwConfirm) {
         showAuthError("비밀번호 확인이 일치하지 않습니다.");
         return;
       }
-      if (usersDB.some((u) => u.email.toLowerCase() === email)) {
-        showAuthError("이미 가입된 이메일 아이디입니다. 로그인 탭을 이용해 주세요.");
+
+      const { data, error } = await db.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            phone
+          }
+        }
+      });
+
+      if (error) {
+        showAuthError(translateAuthError(error));
         return;
       }
 
-      const newUser = {
-        name,
-        email,
-        password: pw,
-        phone,
-        points: 5000,
-        coupons: [
-          { code: "WELCOME50000", title: "신규회원 50,000원 웰컴 쿠폰", amount: 50000 }
-        ],
-        orders: []
-      };
+      // Supabase 설정상 이미 존재하는 이메일에 대해 identities 가 빈 배열로 반환되는 경우 처리
+      if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        showAuthError("이미 가입된 이메일 주소입니다. 로그인 탭을 이용해 주세요.");
+        return;
+      }
 
-      usersDB.push(newUser);
-      currentUser = newUser;
-      saveState();
-      closeAllOverlays();
-      showToast(`${name}님 가입 완료! 50,000원 웰컴 쿠폰이 지급되었습니다.`);
+      if (data && data.session && data.user) {
+        currentUser = data.user;
+        await fetchMyProfile(currentUser.id);
+        updateHeaderBadges();
+        closeAllOverlays();
+        showToast(`${name} 님 회원가입 완료! WELCOME 등급 및 3,000P가 지급되었습니다.`);
+      } else {
+        switchAuthTab("login");
+        showToast("회원가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요.");
+      }
     }
 
-    function logoutUser() {
+    async function logoutUser() {
+      const { error } = await db.auth.signOut();
+      if (error) {
+        showToast(translateAuthError(error));
+        return;
+      }
       currentUser = null;
-      saveState();
+      currentProfile = null;
+      updateHeaderBadges();
       closeAllOverlays();
       showToast("로그아웃되었습니다.");
     }
 
-    function openMyPage() {
-      if (!currentUser) {
+    async function openMyPage() {
+      const { data } = await db.auth.getSession();
+      const session = data ? data.session : null;
+      if (!session || !session.user) {
+        currentUser = null;
+        currentProfile = null;
+        updateHeaderBadges();
         openAuthModal("login");
-        showToast("마이페이지 확인을 위해 로그인해 주세요.");
+        showToast("마이페이지 확인을 위해 먼저 로그인해 주세요.");
         return;
       }
+
+      currentUser = session.user;
+      const profile = await fetchMyProfile(currentUser.id);
+      updateHeaderBadges();
+
+      const displayName = (profile && profile.name) ||
+        (currentUser.user_metadata && currentUser.user_metadata.name) || "";
+      const displayEmail = (profile && profile.email) || currentUser.email || "";
+      const displayPhone = (profile && profile.phone) ||
+        (currentUser.user_metadata && currentUser.user_metadata.phone) || "";
+      const displayGrade = formatDisplayGrade(profile ? profile.grade : "WELCOME");
+      const displayPoints = profile && typeof profile.points === "number" ? profile.points : 3000;
 
       const wishedProducts = PRODUCTS.filter((p) => wishlist.includes(p.id));
 
       document.getElementById("mypageModalContent").innerHTML = `
         <div class="mypage-banner">
           <div>
-            <div style="font-size:12px; opacity:0.8; margin-bottom:4px;">SAMSUNG REWARDS MEMBER</div>
-            <h2 style="font-size:24px; font-weight:800;">${currentUser.name}님 (${currentUser.email})</h2>
-            <div style="font-size:13px; opacity:0.9; margin-top:4px;">
-              보유 포인트 : <strong>${(currentUser.points || 0).toLocaleString()}P</strong> · 보유 쿠폰 : <strong>${currentUser.coupons.length}장</strong>
+            <div style="font-size:12px; opacity:0.85; margin-bottom:4px;">SAMSUNG REWARDS · ${displayGrade} 등급</div>
+            <h2 style="font-size:24px; font-weight:800;">${displayName} 님 (${displayEmail})</h2>
+            <div style="font-size:13px; opacity:0.95; margin-top:4px;">
+              회원 등급 : <strong>${displayGrade}</strong> · 보유 포인트 : <strong>${displayPoints.toLocaleString()}P</strong>
             </div>
           </div>
           <button class="btn-hero-primary" style="height:38px; padding:0 18px; font-size:13px;" onclick="logoutUser()">로그아웃</button>
         </div>
 
-        <h3 style="font-size:17px; font-weight:800; margin-bottom:10px;">보유 할인 쿠폰</h3>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px; margin-bottom:22px;">
-          ${currentUser.coupons.map((c) => `
-            <div style="border:1.5px dashed var(--accent-blue); background:#eff6ff; padding:12px 16px; border-radius:var(--radius-sm);">
-              <div style="font-size:12px; font-weight:800; color:var(--accent-blue);">${c.code}</div>
-              <div style="font-size:14px; font-weight:700; margin:2px 0;">${c.title}</div>
-              <div style="font-size:12px; color:var(--text-secondary);">장바구니에서 코드 입력 시 즉시 적용</div>
+        <h3 style="font-size:17px; font-weight:800; margin-bottom:10px;">내 회원 정보 수정</h3>
+        <form onsubmit="saveProfileEdit(event)" style="background:var(--bg-subtle); padding:18px; border-radius:var(--radius-md); margin-bottom:22px;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="profileEditEmail">이메일 (변경 불가)</label>
+              <input type="email" id="profileEditEmail" value="${displayEmail}" disabled style="background:#e5e7eb; color:#6b7280;" />
             </div>
-          `).join("")}
-        </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="profileEditName">이름</label>
+              <input type="text" id="profileEditName" value="${displayName}" required />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="profileEditPhone">연락처</label>
+              <input type="tel" id="profileEditPhone" value="${displayPhone}" placeholder="010-1234-5678" />
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:12px; color:var(--text-muted);">등급(${displayGrade}) 및 포인트(${displayPoints.toLocaleString()}P)는 시스템에서 자동 관리됩니다.</span>
+            <button type="submit" class="btn-primary" style="height:38px; padding:0 20px; font-size:13px;">회원 정보 저장</button>
+          </div>
+        </form>
 
-        <h3 style="font-size:17px; font-weight:800; margin-bottom:10px;">최근 주문 내역 (${currentUser.orders.length}건)</h3>
-        ${currentUser.orders.length === 0 ? `
+        <h3 style="font-size:17px; font-weight:800; margin-bottom:10px;">최근 주문 내역 (${localOrders.length}건)</h3>
+        ${localOrders.length === 0 ? `
           <p style="font-size:13px; color:var(--text-secondary); padding:16px; background:var(--bg-subtle); border-radius:var(--radius-sm); margin-bottom:20px;">
             아직 주문 내역이 없습니다.
           </p>
-        ` : currentUser.orders.map((o) => `
+        ` : localOrders.map((o) => `
           <div class="order-card">
             <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:6px;">
               <span>주문번호 : ${o.orderId} (${o.date})</span>
@@ -3179,6 +3258,41 @@
       openOverlay("mypageModal");
     }
 
+    async function saveProfileEdit(e) {
+      e.preventDefault();
+      if (!currentUser) {
+        openAuthModal("login");
+        return;
+      }
+
+      const newName = document.getElementById("profileEditName").value.trim();
+      const newPhone = document.getElementById("profileEditPhone").value.trim();
+
+      if (!newName) {
+        showToast("이름을 입력해 주세요.");
+        return;
+      }
+
+      // grade · points · role 은 DB 보호 컬럼이므로 절대 update payload 에 포함하지 않음
+      const { error } = await db
+        .from("shop_profiles")
+        .update({
+          name: newName,
+          phone: newPhone
+        })
+        .eq("id", currentUser.id);
+
+      if (error) {
+        showToast("회원 정보 저장 실패: " + error.message);
+        return;
+      }
+
+      await fetchMyProfile(currentUser.id);
+      updateHeaderBadges();
+      showToast("회원 정보가 저장되었습니다.");
+      openMyPage();
+    }
+
     // =========================================================================
     // 9. OVERLAY & HEADER BADGE HELPERS
     // =========================================================================
@@ -3200,22 +3314,26 @@
 
       const authBtn = document.getElementById("authHeaderBtn");
       if (currentUser) {
+        const displayName = (currentProfile && currentProfile.name) ||
+          (currentUser.user_metadata && currentUser.user_metadata.name) ||
+          (currentUser.email ? currentUser.email.split("@")[0] : "회원");
         authBtn.classList.add("logged-in");
-        authBtn.textContent = `${currentUser.name}님 · 마이페이지`;
+        authBtn.textContent = `${displayName} 님 · 로그아웃`;
       } else {
         authBtn.classList.remove("logged-in");
-        authBtn.textContent = "로그인 / 회원가입";
+        authBtn.textContent = "로그인 · 회원가입";
       }
     }
 
     // =========================================================================
     // 10. INITIALIZE STOREFRONT
     // =========================================================================
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
       updateHeaderBadges();
       renderCatalog();
       renderSpotlight();
       restartSliderTimer();
+      await syncSessionState();
     });
   </script>
 </body>
