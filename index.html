@@ -680,6 +680,22 @@
       border-radius: var(--radius-pill);
     }
 
+    .soldout-tag {
+      background: #fee2e2;
+      color: var(--danger);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+    }
+
+    .btn-card-cart:disabled,
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .wish-btn {
       width: 34px;
       height: 34px;
@@ -1643,6 +1659,7 @@
         <button data-cat="tv" onclick="selectNavCategory('tv', this)">TV/오디오</button>
         <button data-cat="pc" onclick="selectNavCategory('pc', this)">PC/모니터</button>
         <button onclick="document.getElementById('flagshipSection').scrollIntoView({behavior:'smooth'})">플래그십 맞춤견적</button>
+        <a href="./admin.html" id="adminNavLink" style="display:none; font-size:14px; font-weight:700; color:#1428a0; background:#eef2ff; padding:8px 14px; border-radius:9999px;">관리</a>
       </nav>
 
       <div class="gnb-actions">
@@ -1693,8 +1710,8 @@
               <strong>1,698,400원~</strong>
             </div>
             <div class="hero-cta-group">
-              <button class="btn-hero-primary" onclick="addProductToCart('s26-ultra')">바로 장바구니 담기</button>
-              <button class="btn-hero-secondary" onclick="openProductDetail('s26-ultra')">자세히 보기</button>
+              <button class="btn-hero-primary" onclick="handleHeroCart(0)">바로 장바구니 담기</button>
+              <button class="btn-hero-secondary" onclick="handleHeroDetail(0)">자세히 보기</button>
             </div>
           </div>
         </div>
@@ -1713,8 +1730,8 @@
               <strong>3,490,000원</strong>
             </div>
             <div class="hero-cta-group">
-              <button class="btn-hero-primary" onclick="addProductToCart('bespoke-combo')">바로 장바구니 담기</button>
-              <button class="btn-hero-secondary" onclick="openProductDetail('bespoke-combo')">자세히 보기</button>
+              <button class="btn-hero-primary" onclick="handleHeroCart(1)">바로 장바구니 담기</button>
+              <button class="btn-hero-secondary" onclick="handleHeroDetail(1)">자세히 보기</button>
             </div>
           </div>
         </div>
@@ -1733,8 +1750,8 @@
               <strong>8,290,000원</strong>
             </div>
             <div class="hero-cta-group">
-              <button class="btn-hero-primary" onclick="addProductToCart('neo-qled-8k')">바로 장바구니 담기</button>
-              <button class="btn-hero-secondary" onclick="openProductDetail('neo-qled-8k')">자세히 보기</button>
+              <button class="btn-hero-primary" onclick="handleHeroCart(2)">바로 장바구니 담기</button>
+              <button class="btn-hero-secondary" onclick="handleHeroDetail(2)">자세히 보기</button>
             </div>
           </div>
         </div>
@@ -1753,8 +1770,8 @@
               <strong>2,290,000원</strong>
             </div>
             <div class="hero-cta-group">
-              <button class="btn-hero-primary" onclick="addProductToCart('book5-pro')">바로 장바구니 담기</button>
-              <button class="btn-hero-secondary" onclick="openProductDetail('book5-pro')">자세히 보기</button>
+              <button class="btn-hero-primary" onclick="handleHeroCart(3)">바로 장바구니 담기</button>
+              <button class="btn-hero-secondary" onclick="handleHeroDetail(3)">자세히 보기</button>
             </div>
           </div>
         </div>
@@ -1797,24 +1814,23 @@
     <div class="section-header">
       <div>
         <h2 class="section-title">삼성닷컴 추천 라인업</h2>
-        <p class="section-subtitle" id="catalogResultLabel">총 10개의 공식 인증 상품이 준비되어 있습니다.</p>
+        <p class="section-subtitle" id="catalogResultLabel">불러오는 중</p>
       </div>
     </div>
 
     <div class="catalog-toolbar">
       <div class="filter-pills" id="categoryFilterPills">
-        <button class="filter-pill active" data-cat="all" onclick="filterCatalog('all', this)">전체 (10)</button>
-        <button class="filter-pill" data-cat="mobile" onclick="filterCatalog('mobile', this)">모바일/웨어러블 (4)</button>
-        <button class="filter-pill" data-cat="appliance" onclick="filterCatalog('appliance', this)">BESPOKE 가전 (2)</button>
-        <button class="filter-pill" data-cat="tv" onclick="filterCatalog('tv', this)">TV/게이밍 모니터 (2)</button>
-        <button class="filter-pill" data-cat="pc" onclick="filterCatalog('pc', this)">갤럭시 북/탭 (2)</button>
+        <button class="filter-pill active" data-cat="all" onclick="filterCatalog('all', this)">전체</button>
+        <button class="filter-pill" data-cat="mobile" onclick="filterCatalog('mobile', this)">모바일/웨어러블</button>
+        <button class="filter-pill" data-cat="appliance" onclick="filterCatalog('appliance', this)">BESPOKE 가전</button>
+        <button class="filter-pill" data-cat="tv" onclick="filterCatalog('tv', this)">TV/게이밍 모니터</button>
+        <button class="filter-pill" data-cat="pc" onclick="filterCatalog('pc', this)">갤럭시 북/탭</button>
       </div>
 
-      <select class="sort-select" id="sortSelect" onchange="renderCatalog()">
-        <option value="featured">삼성닷컴 추천순</option>
+      <select class="sort-select" id="sortSelect" onchange="renderCatalogFromCache()">
+        <option value="id-asc">기본 등록순 (ID순)</option>
         <option value="price-asc">낮은 가격순</option>
         <option value="price-desc">높은 가격순</option>
-        <option value="discount">할인 혜택순</option>
       </select>
     </div>
 
@@ -1914,6 +1930,7 @@
             <li><a href="#" onclick="openAuthModal('login'); return false;">로그인</a></li>
             <li><a href="#" onclick="openAuthModal('signup'); return false;">회원가입</a></li>
             <li><a href="#" onclick="openMyPage(); return false;">마이페이지 & 회원정보</a></li>
+            <li id="adminFooterItem" style="display:none;"><a href="./admin.html" style="color:#1428a0; font-weight:700;">관리</a></li>
           </ul>
         </div>
       </div>
@@ -2003,6 +2020,12 @@
     <div id="mypageModalContent"></div>
   </div>
 
+  <!-- Order Complete Modal -->
+  <div class="modal" id="orderCompleteModal" role="dialog" aria-modal="true" aria-labelledby="orderCompleteTitle">
+    <button class="modal-close" onclick="closeAllOverlays()" aria-label="닫기">&times;</button>
+    <div id="orderCompleteContent"></div>
+  </div>
+
   <!-- Slide-Over Cart Drawer -->
   <aside class="cart-drawer" id="cartDrawer" aria-label="장바구니">
     <div class="drawer-header">
@@ -2013,28 +2036,24 @@
     <div class="drawer-body" id="cartItemsContainer"></div>
 
     <div class="drawer-footer">
-      <div class="coupon-row">
-        <input type="text" id="couponInput" placeholder="쿠폰 코드 입력 (예: SAMSUNG2026)" />
-        <button class="btn-dark" style="height:38px; padding:0 16px; font-size:13px;" onclick="applyCoupon()">적용</button>
-      </div>
       <div class="summary-line">
         <span>상품 금액</span>
         <span id="cartSubtotal">0원</span>
-      </div>
-      <div class="summary-line" style="color:var(--accent-blue);">
-        <span>쿠폰/회원 할인</span>
-        <span id="cartDiscount">-0원</span>
       </div>
       <div class="summary-line">
         <span>배송비</span>
         <span>무료배송</span>
       </div>
+      <div class="summary-line" style="color:var(--accent-blue); font-weight:600;">
+        <span>멤버십 혜택</span>
+        <span id="cartExpectedPoints">적립 예정 0P</span>
+      </div>
       <div class="summary-line total">
         <span>총 결제 예정 금액</span>
         <span id="cartTotal">0원</span>
       </div>
-      <button class="btn-primary" style="width:100%; margin-top:14px;" onclick="checkoutOrder()">
-        주문 결제하기
+      <button class="btn-primary" id="checkoutSubmitBtn" style="width:100%; margin-top:14px;" onclick="checkoutOrder()">
+        체험 결제하기
       </button>
     </div>
   </aside>
@@ -2046,308 +2065,39 @@
   <script src="./db.js"></script>
   <script>
     // =========================================================================
-    // 1. PRODUCT CATALOG DATA (All images in ./img/ for GitHub Pages)
+    // 1. SUPABASE SHOP_PRODUCTS CONFIGURATION & DEFAULT IMAGE
     // =========================================================================
-    const PRODUCTS = [
-      {
-        id: "s26-ultra",
-        heroFeatured: true,
-        category: "mobile",
-        name: "Galaxy S26 Ultra",
-        sku: "SM-S948NZBEKOO",
-        img: "./img/prod-galaxy-s26-ultra.png",
-        badge: "NEW | Galaxy AI",
-        discountRate: 10,
-        origPrice: 1887000,
-        price: 1698400,
-        rating: 4.9,
-        reviews: 1284,
-        shortSpec: "6.9형 QHD+ Dynamic AMOLED 2X · 2억 화소 카메라 · S펜 내장",
-        summary: "티타늄 아머 프레임과 차세대 Snapdragon Elite for Galaxy, 온디바이스 실시간 통역 및 프로비주얼 AI 카메라를 탑재한 궁극의 울트라 스마트폰입니다.",
-        colors: [
-          { name: "티타늄 실버블루", hex: "#6b8bb8" },
-          { name: "티타늄 블랙", hex: "#23272f" },
-          { name: "티타늄 그레이", hex: "#8e9299" }
-        ],
-        options: [
-          { label: "256GB", delta: 0 },
-          { label: "512GB", delta: 143000 },
-          { label: "1TB", delta: 396000 }
-        ],
-        specs: {
-          "디스플레이": "174.2mm (6.9형) QHD+ Dynamic AMOLED 2X (1~120Hz)",
-          "프로세서": "Snapdragon 8 Elite Gen 2 for Galaxy (3nm)",
-          "카메라": "후면 2억 화소 광각 + 5,000만 초광각 + 듀얼 망원",
-          "배터리 / S펜": "5,000mAh 초고속 충전 2.0 / 블루투스 S펜 기본 내장"
-        }
-      },
-      {
-        id: "bespoke-combo",
-        heroFeatured: true,
-        category: "appliance",
-        name: "BESPOKE AI 콤보 (25kg/15kg)",
-        sku: "WD25DB8995BZ",
-        img: "./img/prod-bespoke-ai-combo.png",
-        badge: "BEST | 올인원",
-        discountRate: 16,
-        origPrice: 4150000,
-        price: 3490000,
-        rating: 4.9,
-        reviews: 842,
-        shortSpec: "세탁 25kg + 건조 15kg 일체형 · 7형 AI 홈 터치스크린 · 오토 오픈 도어",
-        summary: "세탁물을 옮길 필요 없이 세탁부터 보송보송한 건조까지 한 번에 완료합니다. AI 맞춤코스가 옷감의 무게와 오염도를 감지해 최적의 코스로 케어합니다.",
-        colors: [
-          { name: "새틴 라이트베이지", hex: "#dfd9ce" },
-          { name: "새틴 실버", hex: "#c3c9d1" }
-        ],
-        options: [
-          { label: "단품 설치", delta: 0 },
-          { label: "상단 수납함 패키지", delta: 240000 }
-        ],
-        specs: {
-          "용량": "세탁 25kg / 건조 15kg (국내 최대 일체형 용량)",
-          "디스플레이": "7형 (177.8mm) AI 홈 풀터치 LCD",
-          "핵심 기술": "고효율 인버터 히트펌프 건조 & AI 에코버블",
-          "에너지 효율": "에너지소비효율 1등급 최저기준 대비 40% 추가 절감"
-        }
-      },
-      {
-        id: "neo-qled-8k",
-        heroFeatured: true,
-        category: "tv",
-        name: "Neo QLED 8K QN900F (214cm)",
-        sku: "KQ85QNF900FXKR",
-        img: "./img/prod-neo-qled-8k.png",
-        badge: "8K AI 플래그십",
-        discountRate: 18,
-        origPrice: 10100000,
-        price: 8290000,
-        rating: 5.0,
-        reviews: 319,
-        shortSpec: "85인치 리얼 8K · NQ8 AI 3세대 프로세서 · 12.9mm 인피니티 에어 디자인",
-        summary: "512개의 뉴럴 네트워크가 저해상도 영상까지 8K급 선명도로 업스케일링하며, 공중에 떠 있는 듯한 인피니티 에어 스탠드로 압도적 몰입감을 선사합니다.",
-        colors: [
-          { name: "티탄 블랙", hex: "#1f242d" }
-        ],
-        options: [
-          { label: "214cm (85형) 스탠드형", delta: 0 },
-          { label: "214cm (85형) 슬림핏 벽걸이", delta: 150000 }
-        ],
-        specs: {
-          "화면 크기": "214cm (85인치) Real 8K (7,680 x 4,320)",
-          "AI 프로세서": "NQ8 AI Gen3 Processor (512 뉴럴 네트워크)",
-          "사운드": "90W 6.2.4채널 돌비 애트모스 & 무빙 사운드 Pro+",
-          "디자인": "12.9mm 초슬림 인피니티 에어 디자인"
-        }
-      },
-      {
-        id: "book5-pro",
-        heroFeatured: true,
-        category: "pc",
-        name: "Galaxy Book5 Pro 360 (40.6cm)",
-        sku: "NT960QHA-K71A",
-        img: "./img/prod-galaxy-book5-pro.png",
-        badge: "Copilot+ PC",
-        discountRate: 12,
-        origPrice: 2600000,
-        price: 2290000,
-        rating: 4.8,
-        reviews: 516,
-        shortSpec: "인텔 코어 Ultra 7 · 16형 Dynamic AMOLED 2X 터치 · S펜 기본 제공",
-        summary: "360도 회전 힌지로 노트북과 태블릿을 자유롭게 오가며, 빛 반사를 줄인 코닝 고릴라 글래스 DX 터치스크린과 S펜으로 창의력을 극대화합니다.",
-        colors: [
-          { name: "문스톤 그레이", hex: "#5a6270" },
-          { name: "플래티넘 실버", hex: "#cfd5de" }
-        ],
-        options: [
-          { label: "16GB / 512GB SSD", delta: 0 },
-          { label: "32GB / 1TB SSD", delta: 350000 }
-        ],
-        specs: {
-          "디스플레이": "40.6cm WQXGA+ (2880x1800) Dynamic AMOLED 2X 터치",
-          "프로세서": "Intel® Core™ Ultra 7 프로세서 (47 TOPS NPU)",
-          "두께 / 무게": "12.8mm 초슬림 / 1.69kg",
-          "배터리": "최대 25시간 영상 재생 & 65W USB-C 초고속 충전"
-        }
-      },
-      {
-        id: "z-fold7",
-        heroFeatured: false,
-        category: "mobile",
-        name: "Galaxy Z Fold7",
-        sku: "SM-F966NZKAKOO",
-        img: "./img/prod-galaxy-z-fold7.png",
-        badge: "폴더블 AI",
-        discountRate: 9,
-        origPrice: 2229700,
-        price: 2029000,
-        rating: 4.9,
-        reviews: 673,
-        shortSpec: "8.0형 대화면 폴더블 · 초슬림 아머 플렉스 힌지 · 멀티윈도우 AI",
-        summary: "펼치면 태블릿급 8.0형 대화면, 접으면 한 손에 쏙 들어오는 슬림 바형 스마트폰. 대화면 멀티태스킹과 Galaxy AI 노트 어시스트의 정점을 경험하세요.",
-        colors: [
-          { name: "크래프티드 블랙", hex: "#1b1e24" },
-          { name: "실버 쉐도우", hex: "#9aa2ae" }
-        ],
-        options: [
-          { label: "512GB", delta: 0 },
-          { label: "1TB", delta: 240000 }
-        ],
-        specs: {
-          "메인 디스플레이": "203.1mm (8.0형) QXGA+ Dynamic AMOLED 2X",
-          "커버 디스플레이": "164.8mm (6.5형) HD+ Dynamic AMOLED 2X",
-          "내구성": "향상된 아머 알루미늄 프레임 & IP48 방수방진",
-          "AI 기능": "서클 투 서치, 실시간 통역, 스케치 변환"
-        }
-      },
-      {
-        id: "watch-ultra",
-        heroFeatured: false,
-        category: "mobile",
-        name: "Galaxy Watch Ultra (LTE, 47mm)",
-        sku: "SM-L705FDAAKOO",
-        img: "./img/prod-galaxy-watch-ultra.png",
-        badge: "아웃도어 프로",
-        discountRate: 14,
-        origPrice: 899800,
-        price: 773000,
-        rating: 4.8,
-        reviews: 412,
-        shortSpec: "항공우주 등급 티타늄 쿠션 케이스 · 10ATM 방수 · 듀얼 주파수 GPS",
-        summary: "해발 9,000m 고도부터 수심 100m 해양 환경까지 견디는 극한의 내구성과 최대 100시간 배터리, 갤럭시 AI 에너지 점수로 퍼포먼스를 관리합니다.",
-        colors: [
-          { name: "티타늄 그레이", hex: "#7d8590" },
-          { name: "티타늄 화이트", hex: "#e5e7eb" }
-        ],
-        options: [
-          { label: "47mm LTE 모델", delta: 0 }
-        ],
-        specs: {
-          "소재 / 내구성": "티타늄 Grade 4 케이스 & 사파이어 크리스탈 글래스",
-          "방수 등급": "10ATM + IP68 (MIL-STD-810H 인증)",
-          "GPS / 센서": "L1+L5 듀얼 주파수 GPS & 바이오액티브 센서",
-          "배터리": "590mAh (절전 모드 시 최대 100시간)"
-        }
-      },
-      {
-        id: "buds3-pro",
-        heroFeatured: false,
-        category: "mobile",
-        name: "Galaxy Buds3 Pro",
-        sku: "SM-R630NZAAKOO",
-        img: "./img/prod-galaxy-buds3-pro.png",
-        badge: "24bit Hi-Fi",
-        discountRate: 15,
-        origPrice: 319000,
-        price: 271000,
-        rating: 4.7,
-        reviews: 958,
-        shortSpec: "블레이드 라이트 디자인 · 듀얼 앰프 2-Way 스피커 · 적응형 ANC",
-        summary: "스튜디오 원음에 가까운 24bit/96kHz 초고음질 오디오와 주변 소음을 실시간 분석해 자동 조절하는 Galaxy AI 적응형 액티브 노이즈 캔슬링을 지원합니다.",
-        colors: [
-          { name: "실버", hex: "#b8c0cc" },
-          { name: "화이트", hex: "#f3f4f6" }
-        ],
-        options: [
-          { label: "기본 패키지", delta: 0 }
-        ],
-        specs: {
-          "스피커": "평판형 트위터 + 다이나믹 우퍼 듀얼 앰프",
-          "노이즈 캔슬링": "Galaxy AI 기반 적응형 소음 제어 & 사이렌 감지",
-          "통화 품질": "머신러닝 기반 슈퍼 와이드밴드 통화",
-          "방수 등급": "이어버드 IP57 방수방진"
-        }
-      },
-      {
-        id: "bespoke-jet-ai",
-        heroFeatured: false,
-        category: "appliance",
-        name: "BESPOKE AI 제트 400W",
-        sku: "VS28C9737QG",
-        img: "./img/prod-bespoke-jet-ai.png",
-        badge: "세계 최고 흡입력",
-        discountRate: 17,
-        origPrice: 1790000,
-        price: 1485000,
-        rating: 4.9,
-        reviews: 389,
-        shortSpec: "최대 400W 초강력 흡입력 · AI 모드 2.0 · 일체형 청정스테이션+",
-        summary: "마룻바닥, 카펫, 매트 등 청소 환경을 AI가 스스로 인식해 흡입력과 브러시 회전 속도를 자동 조절하며, 청소 후 먼지통 비움과 살균까지 한 번에 해결합니다.",
-        colors: [
-          { name: "새틴 그레이지", hex: "#c7c2b8" },
-          { name: "새틴 블랙", hex: "#2d323a" }
-        ],
-        options: [
-          { label: "대용량 배터리 2개 패키지", delta: 0 }
-        ],
-        specs: {
-          "흡입력": "HexaJet 모터 최대 400W 초강력 흡입력",
-          "AI 기능": "AI 모드 2.0 (바닥 재질 및 구석 자동 인식)",
-          "위생 관리": "일체형 청정스테이션+ & 99.999% 미세먼지 차단 시스템",
-          "사용 시간": "배터리 2개 기준 최대 160분 연속 사용"
-        }
-      },
-      {
-        id: "odyssey-oled-g9",
-        heroFeatured: false,
-        category: "tv",
-        name: "오디세이 OLED G9 (124cm)",
-        sku: "LS49CG954SKXKR",
-        img: "./img/prod-odyssey-oled-g9.png",
-        badge: "240Hz 게이밍",
-        discountRate: 15,
-        origPrice: 2150000,
-        price: 1827000,
-        rating: 4.9,
-        reviews: 274,
-        shortSpec: "49형 32:9 듀얼 QHD OLED · 240Hz 주사율 · 0.03ms(GTG) 응답속도",
-        summary: "27형 QHD 모니터 두 대를 나란히 둔 듯한 32:9 울트라 와이드 커브드 OLED 스크린과 0.03ms 초고속 응답속도로 차원이 다른 승리를 선사합니다.",
-        colors: [
-          { name: "실버 메탈", hex: "#cbd5e1" }
-        ],
-        options: [
-          { label: "124cm (49형) 모델", delta: 0 }
-        ],
-        specs: {
-          "해상도 / 비율": "5,120 x 1,440 (Dual QHD, 32:9 울트라 와이드)",
-          "주사율 / 응답": "240Hz 주사율 / 0.03ms (GTG) 초고속 응답속도",
-          "곡률 / 패널": "1800R 커브드 OLED (DisplayHDR True Black 400)",
-          "싱크 기술": "AMD FreeSync™ Premium Pro & G-Sync 호환"
-        }
-      },
-      {
-        id: "tab-s10-ultra",
-        heroFeatured: false,
-        category: "pc",
-        name: "Galaxy Tab S10 Ultra (36.9cm)",
-        sku: "SM-X920NZAAKOO",
-        img: "./img/prod-galaxy-tab-s10-ultra.png",
-        badge: "대화면 AI 태블릿",
-        discountRate: 11,
-        origPrice: 1598300,
-        price: 1422000,
-        rating: 4.8,
-        reviews: 465,
-        shortSpec: "14.6형 Dynamic AMOLED 2X · 반사 방지 코팅 · S펜 기본 포함",
-        summary: "14.6형 초대형 대화면과 5.4mm 초슬림 메탈 바디, 저반사 코팅 디스플레이로 야외에서도 선명하게 드로잉과 멀티태스킹을 즐길 수 있습니다.",
-        colors: [
-          { name: "문스톤 그레이", hex: "#646d7a" }
-        ],
-        options: [
-          { label: "Wi-Fi 256GB", delta: 0 },
-          { label: "Wi-Fi 512GB", delta: 165000 }
-        ],
-        specs: {
-          "디스플레이": "369.9mm (14.6형) Dynamic AMOLED 2X (반사 방지 코팅)",
-          "두께 / 무게": "5.4mm 초슬림 / 718g (IP68 방수방진)",
-          "기본 구성품": "IP68 방수방진 S펜 기본 포함",
-          "배터리": "11,200mAh 대용량 배터리"
-        }
+    const DEFAULT_PRODUCT_IMAGE =
+      "data:image/svg+xml;charset=UTF-8," +
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">
+          <rect width="480" height="360" fill="#f1f5f9"/>
+          <rect x="140" y="95" width="200" height="140" rx="18" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2"/>
+          <circle cx="195" cy="145" r="14" fill="#94a3b8"/>
+          <path d="M160 215 L215 165 L255 198 L285 175 L320 215 Z" fill="#94a3b8"/>
+          <text x="240" y="275" font-family="sans-serif" font-size="16" font-weight="700" fill="#475569" text-anchor="middle">SAMSUNG 공식 상품 이미지 준비중</text>
+        </svg>`
+      );
+
+    function getProductImageUrl(imageUrl) {
+      if (typeof imageUrl === "string" && imageUrl.trim() !== "") {
+        return imageUrl.trim();
       }
-    ];
+      return DEFAULT_PRODUCT_IMAGE;
+    }
+
+    function getCategoryLabel(category) {
+      const labels = {
+        mobile: "모바일/웨어러블",
+        appliance: "BESPOKE 가전",
+        tv: "TV/게이밍 모니터",
+        pc: "갤럭시 북/탭"
+      };
+      return labels[category] || category || "공식 스토어";
+    }
 
     // =========================================================================
-    // 2. APPLICATION STATE (Synced with localStorage)
+    // 2. APPLICATION STATE
     // =========================================================================
     let currentSlide = 0;
     let sliderInterval = null;
@@ -2355,18 +2105,28 @@
 
     let activeCategory = "all";
     let searchQuery = "";
-    let spotlightProductId = "s26-ultra";
-    let spotlightColorIdx = 0;
-    let spotlightOptIdx = 0;
+    let currentProducts = [];   // 현재 화면에 표시 중인 shop_products 결과
+    let allActiveProducts = []; // 플래그십 스포트라이트 / 찜 / 장바구니 매칭용 전체 활성 상품 캐시
 
-    let cart = JSON.parse(localStorage.getItem("samsung_demo_cart") || "[]");
+    let spotlightProductId = null;
+    let spotlightQty = 1;
+
+    // 장바구니에는 표의 id 를 담아둠 (기존 브라우저 장바구니 키와 호환 + id 기반 정규화)
+    let rawCart = JSON.parse(localStorage.getItem("samsung_demo_cart") || "[]");
+    let cart = Array.isArray(rawCart)
+      ? rawCart
+          .filter((item) => item && item.id !== undefined && item.id !== null)
+          .map((item) => ({
+            id: item.id,
+            qty: Number(item.qty) > 0 ? Number(item.qty) : 1
+          }))
+      : [];
+
     let wishlist = JSON.parse(localStorage.getItem("samsung_demo_wish") || "[]");
-    let appliedCoupon = null;
 
     // Supabase Auth 세션 및 shop_profiles 프로필 상태 (브라우저 localStorage 에 회원 정보/비밀번호 저장 안 함)
     let currentUser = null;    // Supabase auth.user 객체
     let currentProfile = null; // shop_profiles 테이블의 내 행 데이터
-    let localOrders = [];      // 다음 단계에서 shop_orders 로 이전될 임시 주문 내역
 
     function saveState() {
       localStorage.setItem("samsung_demo_cart", JSON.stringify(cart));
@@ -2375,7 +2135,7 @@
     }
 
     function formatKRW(num) {
-      return num.toLocaleString("ko-KR") + "원";
+      return Number(num || 0).toLocaleString("ko-KR") + "원";
     }
 
     function showToast(msg) {
@@ -2434,6 +2194,24 @@
       }
     }
 
+    function handleHeroCart(slideIdx) {
+      const target = allActiveProducts[slideIdx] || allActiveProducts[0];
+      if (!target) {
+        showToast("상품 정보를 불러오는 중입니다.");
+        return;
+      }
+      addProductToCart(target.id);
+    }
+
+    function handleHeroDetail(slideIdx) {
+      const target = allActiveProducts[slideIdx] || allActiveProducts[0];
+      if (!target) {
+        showToast("상품 정보를 불러오는 중입니다.");
+        return;
+      }
+      openProductDetail(target.id);
+    }
+
     // Smooth Scroll Parallax for Full-Bleed Hero
     let scrollTicking = false;
     window.addEventListener("scroll", () => {
@@ -2475,7 +2253,7 @@
     });
 
     // =========================================================================
-    // 4. SCROLL-REVEAL PRODUCT CATALOG GRID
+    // 4. SUPABASE SHOP_PRODUCTS CATALOG GRID
     // =========================================================================
     let cardObserver = null;
 
@@ -2498,102 +2276,138 @@
       cards.forEach((card) => cardObserver.observe(card));
     }
 
-    function selectNavCategory(cat, btnEl) {
-      document.querySelectorAll(".gnb-nav button").forEach((b) => b.classList.remove("active"));
-      if (btnEl) btnEl.classList.add("active");
-      filterCatalog(cat);
-      document.getElementById("catalogSection").scrollIntoView({ behavior: "smooth" });
-    }
-
-    function filterCatalog(cat) {
-      activeCategory = cat;
-      document.querySelectorAll(".filter-pill").forEach((p) => {
-        p.classList.toggle("active", p.dataset.cat === cat);
-      });
-      renderCatalog();
-    }
-
-    function handleSearch(val) {
-      searchQuery = val.trim().toLowerCase();
-      renderCatalog();
-    }
-
-    function resetFilters() {
-      activeCategory = "all";
-      searchQuery = "";
-      document.getElementById("searchInput").value = "";
-      document.querySelectorAll(".filter-pill").forEach((p) => p.classList.toggle("active", p.dataset.cat === "all"));
-      document.querySelectorAll(".gnb-nav button").forEach((b) => b.classList.toggle("active", b.dataset.cat === "all"));
-      renderCatalog();
-    }
-
-    function renderCatalog() {
-      const sortMode = document.getElementById("sortSelect").value;
-      let list = PRODUCTS.filter((p) => {
-        const matchCat = activeCategory === "all" || p.category === activeCategory;
-        const matchQuery = !searchQuery ||
-          p.name.toLowerCase().includes(searchQuery) ||
-          p.shortSpec.toLowerCase().includes(searchQuery) ||
-          p.sku.toLowerCase().includes(searchQuery);
-        return matchCat && matchQuery;
-      });
-
-      if (sortMode === "price-asc") list.sort((a, b) => a.price - b.price);
-      if (sortMode === "price-desc") list.sort((a, b) => b.price - a.price);
-      if (sortMode === "discount") list.sort((a, b) => b.discountRate - a.discountRate);
-
-      document.getElementById("catalogResultLabel").textContent =
-        `총 ${list.length}개의 공식 인증 상품이 준비되어 있습니다.`;
-
+    function showCatalogStatusMessage(message) {
       const grid = document.getElementById("productGrid");
-      if (list.length === 0) {
-        grid.innerHTML = `
-          <div style="grid-column:1/-1; text-align:center; padding:60px 20px; background:var(--bg-subtle); border-radius:var(--radius-lg);">
-            <h3 style="font-size:20px; margin-bottom:8px;">검색 조건에 일치하는 상품이 없습니다.</h3>
-            <p style="color:var(--text-secondary); margin-bottom:18px;">다른 검색어를 입력하거나 전체 상품 보기를 눌러주세요.</p>
-            <button class="btn-dark" onclick="resetFilters()">전체 상품 보기</button>
-          </div>
-        `;
+      grid.innerHTML = `
+        <div style="grid-column:1/-1; text-align:center; padding:64px 20px; background:var(--bg-subtle); border-radius:var(--radius-lg);">
+          <h3 style="font-size:20px; font-weight:700; color:var(--text-primary);">${message}</h3>
+        </div>
+      `;
+    }
+
+    function renderCategoryFilterPills(productsForCategories) {
+      const pillsEl = document.getElementById("categoryFilterPills");
+      if (!pillsEl) return;
+
+      const defaultCats = ["mobile", "appliance", "tv", "pc"];
+      const dynamicCats = Array.from(
+        new Set(
+          productsForCategories
+            .map((p) => p.category)
+            .filter((c) => typeof c === "string" && c.trim() !== "")
+        )
+      );
+      const cats = dynamicCats.length > 0 ? dynamicCats : defaultCats;
+
+      pillsEl.innerHTML = [
+        `<button class="filter-pill ${activeCategory === "all" ? "active" : ""}" data-cat="all" onclick="filterCatalog('all')">전체</button>`,
+        ...cats.map(
+          (cat) =>
+            `<button class="filter-pill ${activeCategory === cat ? "active" : ""}" data-cat="${cat}" onclick="filterCatalog('${cat}')">${getCategoryLabel(cat)}</button>`
+        )
+      ].join("");
+    }
+
+    async function loadProductsFromDB() {
+      const labelEl = document.getElementById("catalogResultLabel");
+      if (labelEl) labelEl.textContent = "불러오는 중";
+      showCatalogStatusMessage("불러오는 중");
+
+      let query = db
+        .from("shop_products")
+        .select("id, name, category, price, stock, image_url, is_active, created_at")
+        .eq("is_active", true)
+        .order("id", { ascending: true });
+
+      if (activeCategory !== "all") {
+        query = query.eq("category", activeCategory);
+      }
+
+      if (searchQuery) {
+        query = query.ilike("name", `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("상품 목록 조회 오류:", error.message);
+        if (labelEl) labelEl.textContent = "상품을 불러오지 못했습니다.";
+        showCatalogStatusMessage("상품이 없습니다");
         return;
       }
 
+      currentProducts = Array.isArray(data) ? data : [];
+
+      if (activeCategory === "all" && !searchQuery) {
+        allActiveProducts = [...currentProducts];
+        renderCategoryFilterPills(allActiveProducts);
+        if (!spotlightProductId && allActiveProducts.length > 0) {
+          spotlightProductId = allActiveProducts[0].id;
+        }
+        renderSpotlight();
+      }
+
+      renderCatalogFromCache();
+    }
+
+    function renderCatalogFromCache() {
+      const sortMode = document.getElementById("sortSelect").value;
+      const list = [...currentProducts];
+
+      if (sortMode === "price-asc") list.sort((a, b) => Number(a.price) - Number(b.price));
+      if (sortMode === "price-desc") list.sort((a, b) => Number(b.price) - Number(a.price));
+      if (sortMode === "id-asc") list.sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
+
+      const labelEl = document.getElementById("catalogResultLabel");
+      if (list.length === 0) {
+        if (labelEl) labelEl.textContent = "상품이 없습니다";
+        showCatalogStatusMessage("상품이 없습니다");
+        return;
+      }
+
+      if (labelEl) {
+        labelEl.textContent = `총 ${list.length}개의 공식 인증 상품이 준비되어 있습니다.`;
+      }
+
+      const grid = document.getElementById("productGrid");
       grid.innerHTML = list.map((p, idx) => {
-        const isWished = wishlist.includes(p.id);
+        const isWished = wishlist.some((wId) => String(wId) === String(p.id));
         const colDelay = (idx % 4) * 85;
+        const isSoldOut = Number(p.stock) === 0;
+        const imgSrc = getProductImageUrl(p.image_url);
+        const idArg = JSON.stringify(p.id);
+
         return `
           <article class="product-card" style="transition-delay:${colDelay}ms;">
             <div>
               <div class="card-top-row">
-                <span class="discount-tag">최대 ${p.discountRate}% 혜택</span>
-                <button class="wish-btn ${isWished ? "active" : ""}" onclick="toggleWishlist('${p.id}')" aria-label="찜하기">
+                ${
+                  isSoldOut
+                    ? `<span class="soldout-tag">품절</span>`
+                    : `<span class="discount-tag">${getCategoryLabel(p.category)}</span>`
+                }
+                <button class="wish-btn ${isWished ? "active" : ""}" onclick='toggleWishlist(${idArg})' aria-label="찜하기">
                   ${isWished ? "&#9829;" : "&#9825;"}
                 </button>
               </div>
-              <div class="card-img-wrap" onclick="openProductDetail('${p.id}')">
-                <img src="${p.img}" alt="${p.name}" loading="lazy" />
+              <div class="card-img-wrap" onclick='openProductDetail(${idArg})'>
+                <img src="${imgSrc}" alt="${p.name}" loading="lazy" onerror="this.onerror=null; this.src=DEFAULT_PRODUCT_IMAGE;" />
               </div>
-              <div class="card-swatches">
-                ${p.colors.map((c, cIdx) => `
-                  <span class="mini-swatch ${cIdx === 0 ? "active" : ""}" style="background:${c.hex};" title="${c.name}"></span>
-                `).join("")}
-                <span style="font-size:11px; color:var(--text-muted); margin-left:4px;">${p.colors[0].name}</span>
-              </div>
-              <h3 class="card-title" onclick="openProductDetail('${p.id}')">${p.name}</h3>
-              <div class="card-sku">${p.sku}</div>
-              <p class="card-spec-line">${p.shortSpec}</p>
-              <div class="card-rating">
-                <span class="star">&#9733;</span> ${p.rating} <span style="color:var(--text-muted); font-weight:400;">(${p.reviews.toLocaleString()})</span>
-              </div>
+              <h3 class="card-title" onclick='openProductDetail(${idArg})'>${p.name}</h3>
+              <div class="card-sku">상품번호 #${p.id} · ${getCategoryLabel(p.category)}</div>
+              <p class="card-spec-line">${isSoldOut ? "현재 일시 품절된 상품입니다." : `재고 보유 (${Number(p.stock).toLocaleString()}개)`}</p>
             </div>
 
             <div>
               <div class="card-price-area">
-                <div class="card-orig-price">${formatKRW(p.origPrice)}</div>
+                <div class="card-orig-price">삼성닷컴 공식 판매가</div>
                 <div class="card-final-price">${formatKRW(p.price)}</div>
               </div>
               <div class="card-actions">
-                <button class="btn-card-detail" onclick="openProductDetail('${p.id}')">상세보기</button>
-                <button class="btn-card-cart" onclick="addProductToCart('${p.id}')">장바구니</button>
+                <button class="btn-card-detail" onclick='openProductDetail(${idArg})'>상세보기</button>
+                <button class="btn-card-cart" ${isSoldOut ? "disabled" : ""} onclick='addProductToCart(${idArg})'>
+                  ${isSoldOut ? "품절" : "장바구니"}
+                </button>
               </div>
             </div>
           </article>
@@ -2603,67 +2417,112 @@
       initCardRevealObserver();
     }
 
+    async function selectNavCategory(cat, btnEl) {
+      document.querySelectorAll(".gnb-nav button").forEach((b) => b.classList.remove("active"));
+      if (btnEl) btnEl.classList.add("active");
+      await filterCatalog(cat);
+      document.getElementById("catalogSection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    async function filterCatalog(cat) {
+      activeCategory = cat;
+      document.querySelectorAll(".filter-pill").forEach((p) => {
+        p.classList.toggle("active", p.dataset.cat === cat);
+      });
+      await loadProductsFromDB();
+    }
+
+    let searchDebounceTimer = null;
+    function handleSearch(val) {
+      searchQuery = val.trim();
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        loadProductsFromDB();
+      }, 220);
+    }
+
+    async function resetFilters() {
+      activeCategory = "all";
+      searchQuery = "";
+      document.getElementById("searchInput").value = "";
+      document.querySelectorAll(".filter-pill").forEach((p) => p.classList.toggle("active", p.dataset.cat === "all"));
+      document.querySelectorAll(".gnb-nav button").forEach((b) => b.classList.toggle("active", b.dataset.cat === "all"));
+      await loadProductsFromDB();
+    }
+
     // =========================================================================
-    // 5. EDITORIAL FLAGSHIP SPOTLIGHT CONFIGURATOR
+    // 5. EDITORIAL FLAGSHIP SPOTLIGHT CONFIGURATOR (Backed by shop_products)
     // =========================================================================
     function renderSpotlight() {
-      const flagshipList = PRODUCTS.filter((p) => p.heroFeatured);
+      const flagshipList = allActiveProducts.slice(0, 4);
       const tabsEl = document.getElementById("spotlightTabs");
-      tabsEl.innerHTML = flagshipList.map((p) => `
-        <button class="spotlight-tab ${p.id === spotlightProductId ? "active" : ""}"
-                onclick="selectSpotlight('${p.id}')">
-          ${p.name}
-        </button>
-      `).join("");
+      const containerEl = document.getElementById("spotlightContainer");
 
-      const prod = PRODUCTS.find((p) => p.id === spotlightProductId) || flagshipList[0];
-      const selectedColor = prod.colors[spotlightColorIdx] || prod.colors[0];
-      const selectedOpt = prod.options[spotlightOptIdx] || prod.options[0];
-      const finalPrice = prod.price + selectedOpt.delta;
-      const origPrice = prod.origPrice + selectedOpt.delta;
-      const monthly = Math.round(finalPrice / 24);
+      if (flagshipList.length === 0) {
+        tabsEl.innerHTML = "";
+        containerEl.innerHTML = `
+          <div style="grid-column:1/-1; text-align:center; padding:48px 20px; background:var(--bg-subtle); border-radius:var(--radius-lg);">
+            <p style="font-size:15px; color:var(--text-secondary);">상품이 없습니다</p>
+          </div>
+        `;
+        return;
+      }
 
-      const specEntries = Object.entries(prod.specs);
+      tabsEl.innerHTML = flagshipList.map((p) => {
+        const idArg = JSON.stringify(p.id);
+        return `
+          <button class="spotlight-tab ${String(p.id) === String(spotlightProductId) ? "active" : ""}"
+                  onclick='selectSpotlight(${idArg})'>
+            ${p.name}
+          </button>
+        `;
+      }).join("");
 
-      document.getElementById("spotlightContainer").innerHTML = `
+      const prod = flagshipList.find((p) => String(p.id) === String(spotlightProductId)) || flagshipList[0];
+      spotlightProductId = prod.id;
+      const isSoldOut = Number(prod.stock) === 0;
+      const unitPrice = Number(prod.price);
+      const totalPrice = unitPrice * spotlightQty;
+      const monthly = Math.round(totalPrice / 24);
+      const imgSrc = getProductImageUrl(prod.image_url);
+      const idArg = JSON.stringify(prod.id);
+
+      containerEl.innerHTML = `
         <div class="spotlight-visual">
-          <span class="spotlight-badge">${prod.badge}</span>
-          <img src="${prod.img}" alt="${prod.name}" />
+          <span class="spotlight-badge">${isSoldOut ? "품절" : getCategoryLabel(prod.category)}</span>
+          <img src="${imgSrc}" alt="${prod.name}" onerror="this.onerror=null; this.src=DEFAULT_PRODUCT_IMAGE;" />
         </div>
         <div class="spotlight-info">
           <h3>${prod.name}</h3>
-          <div class="spotlight-model">모델명 : ${prod.sku} · ★ ${prod.rating} (${prod.reviews.toLocaleString()}건 리뷰)</div>
-          <p class="spotlight-summary">${prod.summary}</p>
+          <div class="spotlight-model">상품번호 : #${prod.id} · 카테고리 : ${getCategoryLabel(prod.category)}</div>
+          <p class="spotlight-summary">삼성닷컴 공식 온라인 스토어에서 제공하는 정품 라인업입니다. 희망 수량을 선택하고 장바구니에 바로 담아보세요.</p>
 
           <div class="spec-pills">
-            ${specEntries.map(([k, v]) => `
-              <div class="spec-pill">
-                <span>${k}</span>
-                <strong>${v}</strong>
-              </div>
-            `).join("")}
-          </div>
-
-          <div class="config-row">
-            <span class="config-label">색상 선택 : ${selectedColor.name}</span>
-            <div class="swatch-group">
-              ${prod.colors.map((c, idx) => `
-                <button class="color-chip ${idx === spotlightColorIdx ? "active" : ""}"
-                        onclick="spotlightColorIdx=${idx}; renderSpotlight();">
-                  <span class="color-dot" style="background:${c.hex};"></span>
-                  ${c.name}
-                </button>
-              `).join("")}
+            <div class="spec-pill">
+              <span>카테고리</span>
+              <strong>${getCategoryLabel(prod.category)}</strong>
+            </div>
+            <div class="spec-pill">
+              <span>판매 상태</span>
+              <strong>${isSoldOut ? "품절" : `판매중 (재고 ${Number(prod.stock).toLocaleString()}개)`}</strong>
+            </div>
+            <div class="spec-pill">
+              <span>배송 혜택</span>
+              <strong>전 품목 무료 배송</strong>
+            </div>
+            <div class="spec-pill">
+              <span>무이자 할부</span>
+              <strong>최대 24개월 무이자</strong>
             </div>
           </div>
 
           <div class="config-row">
-            <span class="config-label">사양 / 패키지 선택</span>
+            <span class="config-label">구매 수량 선택</span>
             <div class="option-group">
-              ${prod.options.map((o, idx) => `
-                <button class="storage-chip ${idx === spotlightOptIdx ? "active" : ""}"
-                        onclick="spotlightOptIdx=${idx}; renderSpotlight();">
-                  ${o.label} ${o.delta > 0 ? "(+" + formatKRW(o.delta) + ")" : ""}
+              ${[1, 2, 3].map((q) => `
+                <button class="storage-chip ${spotlightQty === q ? "active" : ""}"
+                        onclick="spotlightQty=${q}; renderSpotlight();">
+                  ${q}개
                 </button>
               `).join("")}
             </div>
@@ -2671,13 +2530,15 @@
 
           <div class="spotlight-price-box">
             <div class="price-block">
-              <div class="orig">기준가 ${formatKRW(origPrice)}</div>
-              <div class="final">${formatKRW(finalPrice)}</div>
+              <div class="orig">단가 ${formatKRW(unitPrice)}</div>
+              <div class="final">${formatKRW(totalPrice)}</div>
               <div class="installment">삼성카드 24개월 무이자 시 월 ${formatKRW(monthly)}</div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button class="btn-dark" onclick="openProductDetail('${prod.id}')">상세 스펙</button>
-              <button class="btn-primary" onclick="addConfiguredSpotlightToCart()">장바구니 담기</button>
+              <button class="btn-dark" onclick='openProductDetail(${idArg})'>상세 스펙</button>
+              <button class="btn-primary" ${isSoldOut ? "disabled" : ""} onclick='addConfiguredSpotlightToCart()'>
+                ${isSoldOut ? "품절" : "장바구니 담기"}
+              </button>
             </div>
           </div>
         </div>
@@ -2686,94 +2547,89 @@
 
     function selectSpotlight(id) {
       spotlightProductId = id;
-      spotlightColorIdx = 0;
-      spotlightOptIdx = 0;
+      spotlightQty = 1;
       renderSpotlight();
     }
 
     function addConfiguredSpotlightToCart() {
-      const prod = PRODUCTS.find((p) => p.id === spotlightProductId);
-      const color = prod.colors[spotlightColorIdx] || prod.colors[0];
-      const opt = prod.options[spotlightOptIdx] || prod.options[0];
-      addProductToCart(prod.id, color.name, opt.label, opt.delta);
+      if (!spotlightProductId) return;
+      addProductToCart(spotlightProductId, spotlightQty);
     }
 
     // =========================================================================
-    // 6. PRODUCT DETAIL MODAL
+    // 6. PRODUCT DETAIL MODAL (Fetch single row by id from shop_products)
     // =========================================================================
-    let modalColorIdx = 0;
-    let modalOptIdx = 0;
-
-    function openProductDetail(productId) {
-      modalColorIdx = 0;
-      modalOptIdx = 0;
-      renderDetailModal(productId);
+    async function openProductDetail(productId) {
+      document.getElementById("detailModalContent").innerHTML = `
+        <div style="text-align:center; padding:64px 20px;">
+          <p style="font-size:16px; font-weight:700;">불러오는 중</p>
+        </div>
+      `;
       openOverlay("detailModal");
+
+      const { data: p, error } = await db
+        .from("shop_products")
+        .select("id, name, category, price, stock, image_url, is_active, created_at")
+        .eq("id", productId)
+        .maybeSingle();
+
+      if (error || !p) {
+        document.getElementById("detailModalContent").innerHTML = `
+          <div style="text-align:center; padding:64px 20px;">
+            <p style="font-size:16px; font-weight:700;">상품이 없습니다</p>
+          </div>
+        `;
+        return;
+      }
+
+      renderDetailModal(p);
     }
 
-    function renderDetailModal(productId) {
-      const p = PRODUCTS.find((item) => item.id === productId);
-      if (!p) return;
-      const color = p.colors[modalColorIdx] || p.colors[0];
-      const opt = p.options[modalOptIdx] || p.options[0];
-      const total = p.price + opt.delta;
+    function renderDetailModal(p) {
+      const isSoldOut = Number(p.stock) === 0;
+      const total = Number(p.price);
+      const imgSrc = getProductImageUrl(p.image_url);
+      const isWished = wishlist.some((wId) => String(wId) === String(p.id));
+      const idArg = JSON.stringify(p.id);
 
       document.getElementById("detailModalContent").innerHTML = `
         <div class="detail-grid">
           <div class="detail-img-box">
-            <span class="discount-tag" style="display:inline-block; margin-bottom:10px;">${p.badge} · ${p.discountRate}% 할인</span>
-            <img src="${p.img}" alt="${p.name}" />
+            ${
+              isSoldOut
+                ? `<span class="soldout-tag" style="display:inline-block; margin-bottom:10px;">품절</span>`
+                : `<span class="discount-tag" style="display:inline-block; margin-bottom:10px;">${getCategoryLabel(p.category)}</span>`
+            }
+            <img src="${imgSrc}" alt="${p.name}" onerror="this.onerror=null; this.src=DEFAULT_PRODUCT_IMAGE;" />
             <table class="spec-table">
-              ${Object.entries(p.specs).map(([k, v]) => `
-                <tr><th>${k}</th><td>${v}</td></tr>
-              `).join("")}
+              <tr><th>상품번호</th><td>#${p.id}</td></tr>
+              <tr><th>카테고리</th><td>${getCategoryLabel(p.category)}</td></tr>
+              <tr><th>재고 상태</th><td>${isSoldOut ? "품절 (0개)" : `${Number(p.stock).toLocaleString()}개 보유`}</td></tr>
+              <tr><th>등록일</th><td>${p.created_at ? String(p.created_at).slice(0, 10) : "-"}</td></tr>
             </table>
           </div>
 
           <div>
-            <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">모델코드 : ${p.sku}</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">상품번호 : #${p.id}</div>
             <h2 style="font-size:26px; font-weight:800; margin-bottom:10px;">${p.name}</h2>
-            <p style="font-size:14px; color:var(--text-secondary); margin-bottom:18px; word-break:keep-all;">${p.summary}</p>
-
-            <div class="config-row">
-              <span class="config-label">색상 : ${color.name}</span>
-              <div class="swatch-group">
-                ${p.colors.map((c, idx) => `
-                  <button class="color-chip ${idx === modalColorIdx ? "active" : ""}"
-                          onclick="modalColorIdx=${idx}; renderDetailModal('${p.id}');">
-                    <span class="color-dot" style="background:${c.hex};"></span>
-                    ${c.name}
-                  </button>
-                `).join("")}
-              </div>
-            </div>
-
-            <div class="config-row">
-              <span class="config-label">옵션 선택</span>
-              <div class="option-group">
-                ${p.options.map((o, idx) => `
-                  <button class="storage-chip ${idx === modalOptIdx ? "active" : ""}"
-                          onclick="modalOptIdx=${idx}; renderDetailModal('${p.id}');">
-                    ${o.label}
-                  </button>
-                `).join("")}
-              </div>
-            </div>
+            <p style="font-size:14px; color:var(--text-secondary); margin-bottom:18px; word-break:keep-all;">
+              삼성닷컴 공식 인증 상품입니다. 전 품목 무료 배송 혜택과 공식 A/S 보증이 제공됩니다.
+            </p>
 
             <div style="background:var(--bg-subtle); padding:18px; border-radius:var(--radius-md); margin:18px 0;">
-              <div style="font-size:12px; color:var(--text-muted); text-decoration:line-through;">기준가 ${formatKRW(p.origPrice + opt.delta)}</div>
+              <div style="font-size:12px; color:var(--text-muted);">삼성닷컴 공식 판매가</div>
               <div style="font-size:28px; font-weight:800; color:#000;">${formatKRW(total)}</div>
               <div style="font-size:12px; color:var(--accent-blue); font-weight:600; margin-top:4px;">
-                삼성닷컴 단독 무료배송 · 삼성전자 멤버십 ${Math.round(total * 0.02).toLocaleString()}P 적립 예정
+                ${isSoldOut ? "현재 품절된 상품입니다." : "삼성닷컴 단독 무료배송 · 즉시 주문 가능"}
               </div>
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-              <button class="btn-dark" onclick="toggleWishlist('${p.id}'); renderDetailModal('${p.id}');">
-                ${wishlist.includes(p.id) ? "&#9829; 찜 완료" : "&#9825; 관심상품 찜하기"}
+              <button class="btn-dark" onclick='toggleWishlist(${idArg}); renderDetailModal(${JSON.stringify(p)});'>
+                ${isWished ? "&#9829; 찜 완료" : "&#9825; 관심상품 찜하기"}
               </button>
-              <button class="btn-primary" onclick="addProductToCart('${p.id}', '${color.name}', '${opt.label}', ${opt.delta}); closeAllOverlays();">
-                장바구니 담기
+              <button class="btn-primary" ${isSoldOut ? "disabled" : ""} onclick='addProductToCart(${idArg}); closeAllOverlays();'>
+                ${isSoldOut ? "품절" : "장바구니 담기"}
               </button>
             </div>
           </div>
@@ -2782,10 +2638,18 @@
     }
 
     // =========================================================================
-    // 7. WISHLIST, SHOPPING CART & CHECKOUT
+    // 7. WISHLIST, SHOPPING CART (BY PRODUCT ID) & CHECKOUT
     // =========================================================================
+    function findProductById(productId) {
+      return (
+        currentProducts.find((item) => String(item.id) === String(productId)) ||
+        allActiveProducts.find((item) => String(item.id) === String(productId)) ||
+        null
+      );
+    }
+
     function toggleWishlist(productId) {
-      const idx = wishlist.indexOf(productId);
+      const idx = wishlist.findIndex((wId) => String(wId) === String(productId));
       if (idx === -1) {
         wishlist.push(productId);
         showToast("관심 상품(찜 목록)에 추가되었습니다.");
@@ -2794,42 +2658,50 @@
         showToast("관심 상품에서 해제되었습니다.");
       }
       saveState();
-      renderCatalog();
+      renderCatalogFromCache();
     }
 
-    function addProductToCart(productId, colorName, optLabel, delta = 0) {
-      const p = PRODUCTS.find((item) => item.id === productId);
-      if (!p) return;
-      const chosenColor = colorName || p.colors[0].name;
-      const chosenOpt = optLabel || p.options[0].label;
-      const unitPrice = p.price + delta;
-      const key = `${p.id}__${chosenColor}__${chosenOpt}`;
+    async function addProductToCart(productId, addQty = 1) {
+      let p = findProductById(productId);
+      if (!p) {
+        const { data } = await db
+          .from("shop_products")
+          .select("id, name, category, price, stock, image_url, is_active, created_at")
+          .eq("id", productId)
+          .maybeSingle();
+        p = data;
+      }
 
-      const existing = cart.find((c) => c.key === key);
+      if (!p) {
+        showToast("상품이 없습니다");
+        return;
+      }
+
+      if (Number(p.stock) === 0) {
+        showToast("품절된 상품은 장바구니에 담을 수 없습니다.");
+        return;
+      }
+
+      // 장바구니에는 표의 id 를 담아둠
+      const existing = cart.find((c) => String(c.id) === String(p.id));
       if (existing) {
-        existing.qty += 1;
+        existing.qty += addQty;
       } else {
         cart.push({
-          key,
           id: p.id,
-          name: p.name,
-          img: p.img,
-          color: chosenColor,
-          option: chosenOpt,
-          unitPrice,
-          qty: 1
+          qty: addQty
         });
       }
       saveState();
       showToast(`'${p.name}' 상품이 장바구니에 담겼습니다.`);
     }
 
-    function openCart() {
-      renderCartDrawer();
+    async function openCart() {
       openOverlay("cartDrawer");
+      await renderCartDrawer();
     }
 
-    function renderCartDrawer() {
+    async function renderCartDrawer() {
       const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
       document.getElementById("drawerCartCount").textContent = totalQty;
 
@@ -2838,116 +2710,256 @@
         container.innerHTML = `
           <div style="text-align:center; padding:64px 16px; color:var(--text-secondary);">
             <p style="font-size:16px; font-weight:700; color:#111; margin-bottom:8px;">장바구니가 비어 있습니다.</p>
-            <p style="font-size:13px; margin-bottom:20px;">삼성닷컴의 다양한 Galaxy 및 BESPOKE 신제품을 담아보세요.</p>
+            <p style="font-size:13px; margin-bottom:20px;">삼성닷컴의 다양한 신제품을 담아보세요.</p>
             <button class="btn-dark" onclick="closeAllOverlays()">쇼핑 계속하기</button>
           </div>
         `;
-      } else {
-        container.innerHTML = cart.map((item, idx) => `
+        document.getElementById("cartSubtotal").textContent = "0원";
+        document.getElementById("cartExpectedPoints").textContent = "적립 예정 0P";
+        document.getElementById("cartTotal").textContent = "0원";
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="text-align:center; padding:48px 16px; color:var(--text-secondary);">
+          <p style="font-size:15px; font-weight:700;">불러오는 중</p>
+        </div>
+      `;
+
+      const cartIds = Array.from(new Set(cart.map((c) => c.id)));
+      const { data: fetchedProducts } = await db
+        .from("shop_products")
+        .select("id, name, category, price, stock, image_url, is_active")
+        .in("id", cartIds);
+
+      const productMap = new Map();
+      (fetchedProducts || []).forEach((prod) => {
+        productMap.set(String(prod.id), prod);
+      });
+
+      let totalAmount = 0;
+      container.innerHTML = cart.map((item, idx) => {
+        const prod = productMap.get(String(item.id)) || findProductById(item.id);
+        const name = prod ? prod.name : `상품 #${item.id}`;
+        const categoryText = prod ? getCategoryLabel(prod.category) : "공식 스토어";
+        const unitPrice = prod ? Number(prod.price) : 0;
+        const imgSrc = getProductImageUrl(prod ? prod.image_url : "");
+        const lineTotal = unitPrice * item.qty;
+        totalAmount += lineTotal;
+
+        return `
           <div class="cart-item">
-            <img src="${item.img}" alt="${item.name}" />
+            <img src="${imgSrc}" alt="${name}" onerror="this.onerror=null; this.src=DEFAULT_PRODUCT_IMAGE;" />
             <div class="cart-item-info">
               <div style="display:flex; justify-content:space-between; gap:8px;">
-                <div class="cart-item-title">${item.name}</div>
+                <div class="cart-item-title">${name}</div>
                 <button style="color:var(--text-muted); font-size:16px;" onclick="removeCartItem(${idx})" title="삭제">&times;</button>
               </div>
-              <div class="cart-item-opt">${item.color} · ${item.option}</div>
+              <div class="cart-item-opt">상품번호 #${item.id} · ${categoryText}</div>
               <div class="qty-row">
                 <div class="qty-ctrl">
                   <button onclick="changeCartQty(${idx}, -1)">-</button>
                   <span>${item.qty}</span>
                   <button onclick="changeCartQty(${idx}, 1)">+</button>
                 </div>
-                <strong style="font-size:15px;">${formatKRW(item.unitPrice * item.qty)}</strong>
+                <strong style="font-size:15px;">${formatKRW(lineTotal)}</strong>
               </div>
             </div>
           </div>
-        `).join("");
-      }
+        `;
+      }).join("");
 
-      const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
-      let discount = 0;
-      if (subtotal > 0) {
-        if (currentUser) discount += Math.round(subtotal * 0.03);
-        if (appliedCoupon) discount += appliedCoupon.amount;
-        discount = Math.min(discount, subtotal);
-      }
-
-      document.getElementById("cartSubtotal").textContent = formatKRW(subtotal);
-      document.getElementById("cartDiscount").textContent = "-" + formatKRW(discount);
-      document.getElementById("cartTotal").textContent = formatKRW(Math.max(0, subtotal - discount));
+      const expectedPoints = Math.round(totalAmount * 0.02);
+      document.getElementById("cartSubtotal").textContent = formatKRW(totalAmount);
+      document.getElementById("cartExpectedPoints").textContent = `적립 예정 ${expectedPoints.toLocaleString()}P`;
+      document.getElementById("cartTotal").textContent = formatKRW(totalAmount);
     }
 
-    function changeCartQty(idx, delta) {
+    async function changeCartQty(idx, delta) {
       if (!cart[idx]) return;
       cart[idx].qty += delta;
       if (cart[idx].qty <= 0) cart.splice(idx, 1);
       saveState();
-      renderCartDrawer();
+      await renderCartDrawer();
     }
 
-    function removeCartItem(idx) {
+    async function removeCartItem(idx) {
       cart.splice(idx, 1);
       saveState();
-      renderCartDrawer();
+      await renderCartDrawer();
     }
 
-    function applyCoupon() {
-      const code = document.getElementById("couponInput").value.trim().toUpperCase();
-      if (!code) {
-        showToast("쿠폰 코드를 입력해 주세요. (예: SAMSUNG2026)");
-        return;
-      }
-      if (code === "SAMSUNG2026") {
-        appliedCoupon = { code, amount: 100000 };
-        showToast("삼성닷컴 스페셜 100,000원 할인 쿠폰이 적용되었습니다!");
-        renderCartDrawer();
-      } else if (code === "WELCOME50000") {
-        appliedCoupon = { code, amount: 50000 };
-        showToast("신규회원 50,000원 웰컴 쿠폰이 적용되었습니다!");
-        renderCartDrawer();
-      } else {
-        showToast("유효하지 않은 쿠폰 코드입니다. (SAMSUNG2026 또는 WELCOME50000)");
-      }
+    function openOrderCompleteModal(orderRow, mergedLines, expectedPoints) {
+      document.getElementById("orderCompleteContent").innerHTML = `
+        <div style="text-align:center; padding:8px 0 6px;">
+          <div style="width:52px; height:52px; border-radius:50%; background:#eef2ff; color:var(--samsung-blue); font-size:24px; font-weight:800; display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
+            &#10003;
+          </div>
+          <div style="font-size:12px; font-weight:800; letter-spacing:0.08em; color:var(--samsung-blue); margin-bottom:4px;">ORDER COMPLETED</div>
+          <h2 id="orderCompleteTitle" style="font-size:24px; font-weight:800; margin-bottom:8px;">체험 결제가 완료되었습니다</h2>
+          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:20px;">
+            주문 내역이 정상적으로 접수되었습니다.
+          </p>
+        </div>
+
+        <div style="background:var(--bg-subtle); border-radius:var(--radius-md); padding:18px; margin-bottom:18px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+            <span style="color:var(--text-secondary);">주문 번호</span>
+            <strong style="font-size:15px;">#${orderRow.id}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+            <span style="color:var(--text-secondary);">주문 상태</span>
+            <strong style="color:var(--accent-blue);">${orderRow.status || "결제완료"}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+            <span style="color:var(--text-secondary);">멤버십 포인트</span>
+            <strong style="color:var(--samsung-blue);">적립 예정 ${expectedPoints.toLocaleString()}P</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:17px; font-weight:800; padding-top:10px; border-top:1px solid var(--border-light);">
+            <span>총 결제 합계</span>
+            <span>${formatKRW(orderRow.total)}</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <div style="font-size:13px; font-weight:700; margin-bottom:8px;">주문 상품 (${mergedLines.length}종)</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${mergedLines.map((line) => `
+              <div style="display:flex; justify-content:space-between; font-size:13px; padding:8px 12px; border:1px solid var(--border-light); border-radius:var(--radius-sm);">
+                <span>${line.name} &times; ${line.qty}개</span>
+                <strong>${formatKRW(line.qty * line.unit_price)}</strong>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <button class="btn-dark" onclick="closeAllOverlays()">쇼핑 계속하기</button>
+          <button class="btn-primary" onclick="openMyPage()">마이페이지 주문확인</button>
+        </div>
+      `;
+      openOverlay("orderCompleteModal");
     }
 
-    function checkoutOrder() {
+    async function checkoutOrder() {
       if (cart.length === 0) {
         showToast("장바구니에 주문할 상품이 없습니다.");
         return;
       }
-      if (!currentUser) {
+
+      // ① 결제 버튼을 누르면 먼저 로그인했는지 확인하고, 안 했으면 로그인 화면으로 이동
+      const { data: sessionData, error: sessionError } = await db.auth.getSession();
+      const session = sessionData ? sessionData.session : null;
+      if (sessionError || !session || !session.user) {
+        currentUser = null;
+        currentProfile = null;
+        updateHeaderBadges();
         closeAllOverlays();
         openAuthModal("login");
-        showToast("주문 결제를 위해 삼성 계정 로그인이 필요합니다.");
+        showToast("결제를 진행하려면 먼저 로그인해 주세요.");
         return;
       }
+      currentUser = session.user;
 
-      const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
-      let discount = Math.round(subtotal * 0.03) + (appliedCoupon ? appliedCoupon.amount : 0);
-      discount = Math.min(discount, subtotal);
-      const finalPaid = Math.max(0, subtotal - discount);
+      const checkoutBtn = document.getElementById("checkoutSubmitBtn");
+      if (checkoutBtn) {
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = "주문 처리 중...";
+      }
 
-      const summaryTitle = cart.length === 1
-        ? `${cart[0].name} (${cart[0].color})`
-        : `${cart[0].name} 외 ${cart.length - 1}건`;
+      try {
+        // 같은 상품(product_id)이 장바구니에 여러 번 담겨 있으면 수량을 합쳐 한 줄로 정규화
+        const mergedMap = new Map();
+        cart.forEach((item) => {
+          const key = String(item.id);
+          const qty = Number(item.qty) > 0 ? Number(item.qty) : 1;
+          if (mergedMap.has(key)) {
+            mergedMap.get(key).qty += qty;
+          } else {
+            mergedMap.set(key, { product_id: item.id, qty });
+          }
+        });
 
-      const newOrder = {
-        orderId: "KR" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000),
-        date: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
-        items: summaryTitle,
-        total: finalPaid,
-        status: "결제완료 · 배송준비중"
-      };
+        const mergedList = Array.from(mergedMap.values());
+        const productIds = mergedList.map((m) => m.product_id);
 
-      localOrders.unshift(newOrder);
+        // 최신 단가(price) 조회
+        const { data: fetchedProducts, error: prodError } = await db
+          .from("shop_products")
+          .select("id, name, price, stock")
+          .in("id", productIds);
 
-      cart = [];
-      appliedCoupon = null;
-      saveState();
-      closeAllOverlays();
-      showToast("주문이 완료되었습니다!");
-      openMyPage("orders");
+        if (prodError || !fetchedProducts) {
+          showToast("상품 가격 확인에 실패했습니다: " + (prodError ? prodError.message : "조회 오류"));
+          return;
+        }
+
+        const productMap = new Map();
+        fetchedProducts.forEach((p) => {
+          productMap.set(String(p.id), p);
+        });
+
+        // total 은 수량 × 단가를 모두 더한 값으로 계산
+        let total = 0;
+        const preparedLines = [];
+        for (const item of mergedList) {
+          const prod = productMap.get(String(item.product_id));
+          if (!prod) {
+            showToast(`상품(#${item.product_id}) 정보를 찾을 수 없어 결제를 중단했습니다.`);
+            return;
+          }
+          const unitPrice = Number(prod.price);
+          total += item.qty * unitPrice;
+          preparedLines.push({
+            product_id: prod.id,
+            name: prod.name,
+            qty: item.qty,
+            unit_price: unitPrice
+          });
+        }
+
+        // ② shop_orders 에 { total } 한 줄을 넣고 .select().single() 로 방금 만든 주문의 id 를 받음
+        // (user_id 와 status 는 보내지 않음 -> DB 가 자동 설정)
+        const { data: createdOrder, error: orderError } = await db
+          .from("shop_orders")
+          .insert({ total })
+          .select()
+          .single();
+
+        if (orderError || !createdOrder) {
+          showToast("주문 생성에 실패했습니다: " + (orderError ? orderError.message : "주문 저장 오류"));
+          return;
+        }
+
+        // ③ 받은 id 로 shop_order_items 에 장바구니 상품을 { order_id, product_id, qty, unit_price } 로 한꺼번에 넣음
+        const orderItemsPayload = preparedLines.map((line) => ({
+          order_id: createdOrder.id,
+          product_id: line.product_id,
+          qty: line.qty,
+          unit_price: line.unit_price
+        }));
+
+        const { error: itemsError } = await db
+          .from("shop_order_items")
+          .insert(orderItemsPayload);
+
+        if (itemsError) {
+          showToast("주문 상품 상세 저장에 실패했습니다: " + itemsError.message);
+          return;
+        }
+
+        // ④ 두 번 모두 성공하면 장바구니를 비우고 주문 완료 화면에 주문 번호와 합계를 보여줌
+        const expectedPoints = Math.round(total * 0.02);
+        cart = [];
+        saveState();
+        closeAllOverlays();
+        openOrderCompleteModal(createdOrder, preparedLines, expectedPoints);
+      } finally {
+        if (checkoutBtn) {
+          checkoutBtn.disabled = false;
+          checkoutBtn.textContent = "체험 결제하기";
+        }
+      }
     }
 
     // =========================================================================
@@ -3127,7 +3139,6 @@
         return;
       }
 
-      // Supabase 설정상 이미 존재하는 이메일에 대해 identities 가 빈 배열로 반환되는 경우 처리
       if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
         showAuthError("이미 가입된 이메일 주소입니다. 로그인 탭을 이용해 주세요.");
         return;
@@ -3158,6 +3169,73 @@
       showToast("로그아웃되었습니다.");
     }
 
+    function formatOrderDate(createdAt) {
+      if (!createdAt) return "-";
+      const d = new Date(createdAt);
+      if (Number.isNaN(d.getTime())) return String(createdAt).slice(0, 10);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+      return `${yyyy}.${mm}.${dd} ${hh}:${mi}`;
+    }
+
+    async function fetchMyOrdersWithItems(userId) {
+      const { data: ordersData, error: ordersError } = await db
+        .from("shop_orders")
+        .select("id, user_id, total, status, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
+
+      if (ordersError || !ordersData || ordersData.length === 0) {
+        if (ordersError) console.error("주문 내역 조회 오류:", ordersError.message);
+        return [];
+      }
+
+      const orderIds = ordersData.map((o) => o.id);
+      const { data: itemsData, error: itemsError } = await db
+        .from("shop_order_items")
+        .select("order_id, product_id, qty, unit_price")
+        .in("order_id", orderIds);
+
+      if (itemsError) {
+        console.error("주문 상세 조회 오류:", itemsError.message);
+      }
+
+      const itemsList = Array.isArray(itemsData) ? itemsData : [];
+      const productIds = Array.from(new Set(itemsList.map((it) => it.product_id)));
+
+      const productNameMap = new Map();
+      allActiveProducts.forEach((p) => productNameMap.set(String(p.id), p.name));
+
+      if (productIds.length > 0) {
+        const { data: prodsData } = await db
+          .from("shop_products")
+          .select("id, name")
+          .in("id", productIds);
+        (prodsData || []).forEach((p) => {
+          productNameMap.set(String(p.id), p.name);
+        });
+      }
+
+      return ordersData.map((order) => {
+        const lines = itemsList
+          .filter((it) => String(it.order_id) === String(order.id))
+          .map((it) => ({
+            product_id: it.product_id,
+            name: productNameMap.get(String(it.product_id)) || `상품 #${it.product_id}`,
+            qty: Number(it.qty),
+            unit_price: Number(it.unit_price)
+          }));
+        return {
+          ...order,
+          items: lines
+        };
+      });
+    }
+
     async function openMyPage() {
       const { data } = await db.auth.getSession();
       const session = data ? data.session : null;
@@ -3171,7 +3249,17 @@
       }
 
       currentUser = session.user;
-      const profile = await fetchMyProfile(currentUser.id);
+      document.getElementById("mypageModalContent").innerHTML = `
+        <div style="text-align:center; padding:64px 20px;">
+          <p style="font-size:16px; font-weight:700;">불러오는 중</p>
+        </div>
+      `;
+      openOverlay("mypageModal");
+
+      const [profile, myOrders] = await Promise.all([
+        fetchMyProfile(currentUser.id),
+        fetchMyOrdersWithItems(currentUser.id)
+      ]);
       updateHeaderBadges();
 
       const displayName = (profile && profile.name) ||
@@ -3182,7 +3270,9 @@
       const displayGrade = formatDisplayGrade(profile ? profile.grade : "WELCOME");
       const displayPoints = profile && typeof profile.points === "number" ? profile.points : 3000;
 
-      const wishedProducts = PRODUCTS.filter((p) => wishlist.includes(p.id));
+      const wishedProducts = allActiveProducts.filter((p) =>
+        wishlist.some((wId) => String(wId) === String(p.id))
+      );
 
       document.getElementById("mypageModalContent").innerHTML = `
         <div class="mypage-banner">
@@ -3218,39 +3308,58 @@
           </div>
         </form>
 
-        <h3 style="font-size:17px; font-weight:800; margin-bottom:10px;">최근 주문 내역 (${localOrders.length}건)</h3>
-        ${localOrders.length === 0 ? `
+        <h3 style="font-size:17px; font-weight:800; margin-bottom:10px;">내 주문 내역 (${myOrders.length}건)</h3>
+        ${myOrders.length === 0 ? `
           <p style="font-size:13px; color:var(--text-secondary); padding:16px; background:var(--bg-subtle); border-radius:var(--radius-sm); margin-bottom:20px;">
             아직 주문 내역이 없습니다.
           </p>
-        ` : localOrders.map((o) => `
-          <div class="order-card">
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:6px;">
-              <span>주문번호 : ${o.orderId} (${o.date})</span>
-              <strong style="color:var(--accent-blue);">${o.status}</strong>
+        ` : myOrders.map((o) => {
+          const expectedPts = Math.round(Number(o.total) * 0.02);
+          return `
+            <div class="order-card">
+              <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                <span>주문번호 : <strong>#${o.id}</strong> · 주문일시 : ${formatOrderDate(o.created_at)}</span>
+                <strong style="color:var(--accent-blue);">${o.status || "결제완료"}</strong>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; padding:10px 12px; background:var(--bg-subtle); border-radius:var(--radius-sm);">
+                ${o.items.length === 0
+                  ? `<span style="font-size:13px; color:var(--text-secondary);">주문 상품 상세 내역 없음</span>`
+                  : o.items.map((it) => `
+                    <div style="display:flex; justify-content:space-between; font-size:13px;">
+                      <span><strong>${it.name}</strong> &times; ${it.qty}개</span>
+                      <span style="color:var(--text-secondary);">${formatKRW(it.qty * it.unit_price)}</span>
+                    </div>
+                  `).join("")}
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                <span style="font-size:12px; color:var(--samsung-blue); font-weight:600;">적립 예정 ${expectedPts.toLocaleString()}P</span>
+                <span style="font-size:16px; font-weight:800;">합계 ${formatKRW(o.total)}</span>
+              </div>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <strong style="font-size:15px;">${o.items}</strong>
-              <span style="font-size:16px; font-weight:800;">${formatKRW(o.total)}</span>
-            </div>
-          </div>
-        `).join("")}
+          `;
+        }).join("")}
 
         <h3 style="font-size:17px; font-weight:800; margin:18px 0 10px;">찜한 관심 상품 (${wishedProducts.length}개)</h3>
         ${wishedProducts.length === 0 ? `
           <p style="font-size:13px; color:var(--text-secondary);">하트 아이콘을 눌러 관심 상품을 저장해 보세요.</p>
         ` : `
           <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px;">
-            ${wishedProducts.map((p) => `
-              <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border-light); padding:10px; border-radius:var(--radius-sm);">
-                <img src="${p.img}" alt="${p.name}" style="width:52px; height:52px; object-fit:cover; border-radius:8px;" />
-                <div style="flex:1; min-width:0;">
-                  <div style="font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
-                  <div style="font-size:12px; color:var(--accent-blue); font-weight:700;">${formatKRW(p.price)}</div>
+            ${wishedProducts.map((p) => {
+              const idArg = JSON.stringify(p.id);
+              const isSoldOut = Number(p.stock) === 0;
+              return `
+                <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border-light); padding:10px; border-radius:var(--radius-sm);">
+                  <img src="${getProductImageUrl(p.image_url)}" alt="${p.name}" style="width:52px; height:52px; object-fit:cover; border-radius:8px;" onerror="this.onerror=null; this.src=DEFAULT_PRODUCT_IMAGE;" />
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
+                    <div style="font-size:12px; color:var(--accent-blue); font-weight:700;">${formatKRW(p.price)}</div>
+                  </div>
+                  <button class="btn-dark" style="height:30px; padding:0 10px; font-size:11px;" ${isSoldOut ? "disabled" : ""} onclick='addProductToCart(${idArg})'>
+                    ${isSoldOut ? "품절" : "담기"}
+                  </button>
                 </div>
-                <button class="btn-dark" style="height:30px; padding:0 10px; font-size:11px;" onclick="addProductToCart('${p.id}')">담기</button>
-              </div>
-            `).join("")}
+              `;
+            }).join("")}
           </div>
         `}
       `;
@@ -3312,6 +3421,12 @@
       document.getElementById("cartCountBadge").textContent = totalCart;
       document.getElementById("wishCountBadge").textContent = wishlist.length;
 
+      const isAdmin = Boolean(currentUser && currentProfile && currentProfile.role === "admin");
+      const adminNavLink = document.getElementById("adminNavLink");
+      const adminFooterItem = document.getElementById("adminFooterItem");
+      if (adminNavLink) adminNavLink.style.display = isAdmin ? "inline-flex" : "none";
+      if (adminFooterItem) adminFooterItem.style.display = isAdmin ? "list-item" : "none";
+
       const authBtn = document.getElementById("authHeaderBtn");
       if (currentUser) {
         const displayName = (currentProfile && currentProfile.name) ||
@@ -3330,10 +3445,11 @@
     // =========================================================================
     window.addEventListener("DOMContentLoaded", async () => {
       updateHeaderBadges();
-      renderCatalog();
-      renderSpotlight();
       restartSliderTimer();
-      await syncSessionState();
+      await Promise.all([
+        loadProductsFromDB(),
+        syncSessionState()
+      ]);
     });
   </script>
 </body>
